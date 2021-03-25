@@ -4,6 +4,11 @@
 
 Communication based on MQTT
 ===============================================
+V0.2 Update:
+1. After mqtt connects, in topic "control_status”, publish the message "1",
+2. At the end of the program, in topic "control_status", publish the message "0".
+   
+   Expect to save server traffic
 
 基于MQTT通信
 ================================================
