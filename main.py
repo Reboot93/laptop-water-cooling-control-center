@@ -91,26 +91,26 @@ class MainWindow(QWidget, Ui_Form):
             self.bt_off.toggle()
         if mqtt_flag == 0:
             if do_connect() == True:
-                publish(Topic_SetPower, 'on')
+                publish(Topic_SetPower, 'on', 0, False)
             else:
                 QMessageBox.critical(self, 'MQTT连接',
                                      'MQTT连接失败，当前设置为：\n服务器地址：' + control_data[6] + '\n端口：' + control_data[
                                          7] + '\n请检查MQTT设置或检查服务器状态')
         else:
-            publish(Topic_SetPower, 'on')
+            publish(Topic_SetPower, 'on', 0, False)
 
     def bt_off_clicked(self):
         if self.bt_on.isChecked() == True:
             self.bt_on.toggle()
         if mqtt_flag == 0:
             if do_connect() == True:
-                publish(Topic_SetPower, 'off')
+                publish(Topic_SetPower, 'off', 0, False)
             else:
                 QMessageBox.critical(self, 'MQTT连接',
                                      'MQTT连接失败，当前设置为：\n服务器地址：' + control_data[6] + '\n端口：' + control_data[
                                          7] + '\n请检查MQTT设置或检查服务器状态')
         else:
-            publish(Topic_SetPower, 'off')
+            publish(Topic_SetPower, 'off', 0, False)
 
     # ==/ 保存MQTT服务器设置 /===============
     def updata_mqtt(self):
@@ -140,13 +140,13 @@ class MainWindow(QWidget, Ui_Form):
         self.json_save()
         if mqtt_flag == 0:
             if do_connect() == True:
-                publish(Topic_SetPwm, json.dumps(control_data[0:6]))
+                publish(Topic_SetPwm, json.dumps(control_data[0:6]), 0, False)
             else:
                 QMessageBox.critical(self, 'MQTT连接',
                                      'MQTT连接失败，当前设置为：\n服务器地址：' + control_data[6] + '\n端口：' + control_data[
                                          7] + '\n请检查MQTT设置或检查服务器状态')
         else:
-            publish(Topic_SetPwm, json.dumps(control_data[0:6]))
+            publish(Topic_SetPwm, json.dumps(control_data[0:6]), 0, False)
 
     def json_save(self):
         global control_data
@@ -189,10 +189,12 @@ def Mqtt_connect():
         def on_connect(client, userdata, flags, rc):
             if rc == 0:
                 print("Connected to MQTT Broker!")
+                publish('control_status', '1', 1, True)
             else:
                 print("Failed to connect, return code %d\n", rc)
 
         client = mqtt_client.Client(client_id)
+        client.will_set('control_status', '0', 0, True)
         client.on_connect = on_connect
         client.connect(control_data[6], int(control_data[7]))
         return client
@@ -230,9 +232,9 @@ def subscribe(client):
     client.on_message = on_message
 
 
-def publish(topic, msg):
+def publish(topic, msg, qos, retain):
     global client
-    result = client.publish(topic, msg)
+    result = client.publish(topic, msg, qos, retain)
     # result: [0, 1]
     status = result[0]
     if status == 0:
